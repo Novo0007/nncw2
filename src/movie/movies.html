@@ -150,7 +150,7 @@
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
   const provider = new GoogleAuthProvider(app);
-  const auth = getAuth();
+  const auth = getAuth(app);
 
 
   signInWithPopup(auth, provider)
