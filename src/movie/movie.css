@@ -116,6 +116,11 @@
   }
   
   #playlist li.current {
-    background-color: #007bff;
+    background-color:  #303131;
   }
+#typed3{
+  color: #00db4d;
+  position: relative;
+    font-family: 'Edu NSW ACT Foundation', cursive;
+}
   
