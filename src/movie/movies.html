@@ -91,6 +91,7 @@
      data-text="continue_with"
      data-size="large">
 </div>
+    <button id="googleBtn">Sign in with Google </button>
       </body>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-EF9VTKXB5G"></script>
   <script>
@@ -152,27 +153,62 @@
   const provider = new GoogleAuthProvider(app);
   const auth = getAuth(app);
 
+googleBtn.addEventListener('click', (e) => {
+        // signInWithRedirect(auth, provider);
 
-  signInWithPopup(auth, provider)
-  .then((result) => {
-    // This gives you a Google Access Token. You can use it to access the Google API.
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    const token = credential.accessToken;
-    // The signed-in user info.
-    const user = result.user;
-    // IdP data available using getAdditionalUserInfo(result)
-    // ...
-  }).catch((error) => {
-    // Handle Errors here.
-    const errorCode = error.code;
-    const errorMessage = error.message;
-    // The email of the user's account used.
-    const email = error.customData.email;
-    // The AuthCredential type that was used.
-    const credential = GoogleAuthProvider.credentialFromError(error);
-    // ...
-    
-  });
+        // getRedirectResult(auth)
+        //     .then((result) => {
+        //         // This gives you a Google Access Token. You can use it to access Google APIs.
+        //         const credential = GoogleAuthProvider.credentialFromResult(result);
+        //         const token = credential.accessToken;
+        
+        //         // The signed-in user info.
+        //         const user = result.user;
+        
+        //         // name = displayName
+        //         // email = email
+        //         // photo = photoURL
+        
+        //         alert(user.displayName);
+        
+        //     }).catch((error) => {
+        //     // Handle Errors here.
+        //     const errorCode = error.code;
+        //     const errorMessage = error.message;
+        //     // The email of the user's account used.
+        //     const email = error.email;
+        //     // The AuthCredential type that was used.
+        //     const credential = GoogleAuthProvider.credentialFromError(error);
+        //     // ...
+        
+        //     alert(errorMessage);
+        // });
+
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                // This gives you a Google Access Token. You can use it to access the Google API.
+                const credential = GoogleAuthProvider.credentialFromResult(result);
+                const token = credential.accessToken;
+                // The signed-in user info.
+                const user = result.user;
+                        // name = displayName
+                        // email = email
+                        // photo = photoURL
+
+                        alert(user.displayName);
+                // ...
+            }).catch((error) => {
+            // Handle Errors here.
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            // The email of the user's account used.
+            const email = error.email;
+            // The AuthCredential type that was used.
+            const credential = GoogleAuthProvider.credentialFromError(error);
+            // ...
+            alert(errorMessage);
+        });
+    });
   
         </script>
   
