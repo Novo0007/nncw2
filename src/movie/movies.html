@@ -83,7 +83,9 @@
      data-auto_select="true"
      data-itp_support="true">
 </div>
+    <br>
     <button id="googleBtn">Sign in with Google </button>
+    <br>
       </body>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-EF9VTKXB5G"></script>
   <script>
@@ -145,7 +147,7 @@
   const provider = new GoogleAuthProvider(app);
   const auth = getAuth(app);
 
-g_id_onload.addEventListener('click', (e) => {
+googleBtn.addEventListener('click', (e) => {
         // signInWithRedirect(auth, provider);
 
         // getRedirectResult(auth)
