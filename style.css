@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Red+Hat+Text:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+:root{
+--color: #2a2d2a; 
+}
+
+body {
+  font-family: 'Red Hat Text', sans-serif;
+  position: absolute;
+  scroll-behavior: smooth;
+  background-color: black;
+   
+}
+
+.container {
+  text-align: center;
+  color: #00e000;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  
+ 
+  align-items: center;
+  justify-content: center;
+  background-image: url("https://firebasestorage.googleapis.com/v0/b/nopeca-106bd.appspot.com/o/GIF%2F4167709.gif?alt=media&token=b7a5522e-6e3b-4ae4-95e3-7edeca8e18a8");
+  background-size: cover;
+  background-position: center;
+  
+/*  this is where the magic happens:  */
+  background-attachment: fixed;
+}
+
+h1 {
+  font-weight: 700;
+  font-size: 3rem;
+}
+
+p {
+  max-width: 52ch;
+  line-height: 1.5;
+  padding: 1em;
+}
+
+a {
+  display: inline-block;
+  padding: 1em 3.5em;
+  background-color: white;
+  color: #050505;
+  text-decoration: none;
+  text-transform: uppercase;
+  border-radius: 0.3em;
+  font-weight: 700;
+  letter-spacing: .5px;
+  font-size: .875rem;
+}
+
+.blank,
+.other {
+  width: 100%;
+  min-height: 10vh;
+  background-color: #0046b8;
+}
+
+.second {
+  background-image:url("");
+  background-attachment: fixed;
+  height: 1200px;
+}
+
+h3 {
+  font-weight: 700;
+  font-size: 1.6rem;
+  margin-top: 1em;
+}
+
+.card > a {
+  margin-bottom: 2em;
+}
+
+.item {
+  display: flex;
+  max-width: 320px;
+  background-color: black;;
+  flex-direction: column;
+  align-items: center;
+  border-radius: .5em;
+  -webkit-box-shadow: 0px 29px 38px -15px rgba(0,0,0,0.43);
+  -moz-box-shadow: 0px 29px 38px -15px rgba(0,0,0,0.43);
+  box-shadow: 0px 29px 38px -15px rgba(0,0,0,0.43);
+}
+
+.img {
+  width: 90%;
+  height: 200px;
+  background-color: lightgrey;
+  background-position: center;
+  margin-top: 20px;
+  border-radius: .3em;;
+}
+
+.img-first {
+  background-image: url("https://firebasestorage.googleapis.com/v0/b/nopeca-106bd.appspot.com/o/videos%2Fmovies%20img%2Fdownload.jpeg?alt=media&token=9eee98b8-dea5-41e0-a96a-25a920a4038c");
+}
+
+.img-second {
+  background-image: url("https://images.unsplash.com/photo-1628746404106-4d3843b231b3?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8Y2F2aW5nfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=900&q=60");
+}
+
+.img-third {
+  background-image: url("https://images.unsplash.com/photo-1632853073412-782bf0279d65?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80");
+}
+
+.second {
+  flex-direction: row;
+  gap: 1.6em;
+}
+.wrapper {
+  height: 10vh;
+  /*This part is important for centering*/
+  display: grid;
+  place-items: center;
+}
+
+.container-1{
+   background-image:url("https://firebasestorage.googleapis.com/v0/b/nopeca-106bd.appspot.com/o/nncw2%2Fimg%2F200w.gif?alt=media&token=99f76803-cb0d-4fad-bb2d-c2ec9749fa0f");
+  text-align: center;
+  color: #00e000;
+ font-family: 'Pacifico', cursive;
+}

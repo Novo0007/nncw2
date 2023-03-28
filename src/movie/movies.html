@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Movies</title>
+  <link href="movie.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12/lib/typed.min.js"></script>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="video-container">
+      <video id="video" controls controlsList="nodownload">
+        <source
+          src="https://firebasestorage.googleapis.com/v0/b/nopeca-106bd.appspot.com/o/videos%2FBlack-Panther-.mp4?alt=media&token=cddd5881-4a17-401d-a84f-95a8b8556749"
+          type="video/mp4" />
+      </video>
+      <div class="controls">
+        <div class="progress-container">
+          <input type="range" min="0" max="100" value="0" class="progress-bar" id="progress-bar" />
+        </div>
+        <div class="buttons">
+          <button class="play-pause" id="play-pause">
+            <i class="fas fa-play"></i>
+          </button>
+          <button class="mute" id="mute">
+            <i class="fas fa-volume-up"></i>
+          </button>
+          <input type="range" min="0" max="100" value="100" class="volume" id="volume" />
+          <button class="full-screen" id="full-screen">
+            <i class="fas fa-expand"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <ul id="playlist">
+      <li
+        data-src="https://firebasestorage.googleapis.com/v0/b/nopeca-106bd.appspot.com/o/videos%2FBlack-Panther-.mp4?alt=media&token=cddd5881-4a17-401d-a84f-95a8b8556749"
+        class="current">Black-Panther</li>
+      <li
+        data-src="https://firebasestorage.googleapis.com/v0/b/nopeca-106bd.appspot.com/o/videos%2FDay-Shift-(2022)-Hindi-Dubbed-NF-HDRip--720p-%5BOrgmovies%5D.mp4?alt=media&token=aef05c8a-f4b3-4f7a-b817-d2df49712f62">
+        Day-Shift-(2022)-Hindi</li>
+      <li
+        data-src="https://firebasestorage.googleapis.com/v0/b/nopeca-106bd.appspot.com/o/videos%2FBlack-Adam-.mp4?alt=media&token=165ca81c-63a4-4e86-a138-5e39a404ed29">
+        Black Adam (Hindi)</li>
+      <li data-src="">coming soon</li>
+      <a style="text-decoration: none" href="https://nncwn.blogspot.com/ "> Home 🏡 </a>
+    </ul>
+  </div>
+
+  <body onload="startTime()">
+    <div id="txt"></div>
+    <script src="movie.js"></script>
+    <script type="text/javascript">
+      atOptions = {
+        'key': 'd839ad0faa2532143df7a0511fe0aaf3',
+        'format': 'iframe',
+        'height': 250,
+        'width': 300,
+        'params': {}
+      };
+      document.write('<scr' + 'ipt type="text/javascript" src="http' + (location.protocol === 'https:' ? 's' : '') + '://www.profitabledisplaynetwork.com/d839ad0faa2532143df7a0511fe0aaf3/invoke.js"></scr' + 'ipt>');
+    </script>
+    <script type='text/javascript'
+      src='//pl18834653.highrevenuegate.com/c3/c8/7b/c3c87bfb74429b0ecdbef206a8d3ab4b.js'></script>
+    <div id="typed3"></div>
+    <div id="g_id_onload"
+     data-client_id="356481785113-n2ot6cp4e85b0mhbtmgrt2dim8uqjn4v.apps.googleusercontent.com"
+     data-context="signin"
+     data-ux_mode="popup"
+     data-login_uri="https://nncw2.online/src/movie/movies.html"
+     data-nonce=""
+     data-auto_select="true"
+     data-itp_support="true">
+</div>
+
+<div class="g_id_signin"
+     data-type="icon"
+     data-shape="circle"
+     data-theme="outline"
+     data-text="signin_with"
+     data-size="large">
+</div>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<div id="g_id_onload"
+     data-client_id="356481785113-n2ot6cp4e85b0mhbtmgrt2dim8uqjn4v.apps.googleusercontent.com"
+     data-auto_select="true"
+     data-login_uri="https://nncw2.online/src/movie/movies.html">
+</div>
+<div class="g_id_signout">Sign Out</div>
+<button id="googleBtn">Sign in with Google </button>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EF9VTKXB5G"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-EF9VTKXB5G');
+ 
+    var typed3 = new Typed('#typed3', {
+      strings: ['Welcome: NNC INTERNATION', 'NNC:All Movies are here ', 'NNC: enjoy;'],
+      typeSpeed: 77,
+      backSpeed: 77,
+      smartBackspace: true,
+      loop: true
+    });
+
+    function startTime() {
+      var today = new Date();
+      var h = today.getHours();
+      var m = today.getMinutes();
+      var s = today.getSeconds();
+      m = checkTime(m);
+      s = checkTime(s);
+      document.getElementById('txt').innerHTML =
+        h + ":" + m + ":" + s;
+      var t = setTimeout(startTime, 500);
+    }
+    function checkTime(i) {
+      if (i < 10) { i = "0" + i };  // add zero in front of numbers < 10
+      return i;
+    }
+    </script>
+
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-analytics.js";
+  import { getAuth, signInWithPopup, getRedirectResult, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-auth.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyB3nAT6T9x7nym7nbRkEbP2hrUVF37C9jc",
+    authDomain: "nopeca-106bd.firebaseapp.com",
+    databaseURL: "https://nopeca-106bd-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "nopeca-106bd",
+    storageBucket: "nopeca-106bd.appspot.com",
+    messagingSenderId: "356481785113",
+    appId: "1:356481785113:web:c5e0831590f8df6e0c7988",
+    measurementId: "G-EF9VTKXB5G"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const provider = new GoogleAuthProvider(app);
+  const auth = getAuth();
+
+
+  signInWithPopup(auth, provider)
+  .then((result) => {
+    // This gives you a Google Access Token. You can use it to access the Google API.
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const token = credential.accessToken;
+    // The signed-in user info.
+    const user = result.user;
+    // IdP data available using getAdditionalUserInfo(result)
+    // ...
+  }).catch((error) => {
+    // Handle Errors here.
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    // The email of the user's account used.
+    const email = error.customData.email;
+    // The AuthCredential type that was used.
+    const credential = GoogleAuthProvider.credentialFromError(error);
+    // ...
+    
+  });
+  getRedirectResult(auth)
+  .then((result) => {
+    // This gives you a Google Access Token. You can use it to access Google APIs.
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const token = credential.accessToken;
+
+    // The signed-in user info.
+    const user = result.user;
+    // IdP data available using getAdditionalUserInfo(result)
+    // ...
+  }).catch((error) => {
+    // Handle Errors here.
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    // The email of the user's account used.
+    const email = error.customData.email;
+    // The AuthCredential type that was used.
+    const credential = GoogleAuthProvider.credentialFromError(error);
+    // ...
+  });
+        </script>
+        </body>
+        </html>
