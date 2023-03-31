@@ -9,7 +9,9 @@ body {
   position: absolute;
   scroll-behavior: smooth;
   background-color: black;
-   
+    min-height: 100%;
+    top: 0px;
+  padding: 24px 0;
 }
 
 .container {
