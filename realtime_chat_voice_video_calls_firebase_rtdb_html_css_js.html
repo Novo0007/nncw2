@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Realtime Chat + Voice/Video Calls (Firebase RTDB) — Debugged</title>
+  <style>
+    :root{ --bg:#0f1115; --card:#161a22; --muted:#222735; --text:#e6e8ef; --sub:#9aa3b2; --pri:#4f8cff; --ok:#22c55e; --warn:#f59e0b; --err:#ef4444 }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#0f1115,#10131a);color:var(--text);font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial}
+    a{color:var(--pri)}
+    .app{display:grid;grid-template-rows:auto 1fr auto;min-height:100vh}
+    header{display:flex;gap:12px;align-items:center;padding:12px 16px;background:rgba(22,26,34,.8);backdrop-filter: blur(8px);border-bottom:1px solid #22293a;position:sticky;top:0;z-index:3}
+    header .brand{font-weight:700}
+    header .pill{background:var(--muted);padding:6px 10px;border-radius:999px;color:var(--sub)}
+    header .sp{flex:1}
+    .shell{display:grid;grid-template-columns:300px 1fr;gap:0;height:calc(100vh - 120px)}
+    @media (max-width: 900px){.shell{grid-template-columns:1fr}}
+    .sidebar{border-right:1px solid #22293a;background:var(--card);display:flex;flex-direction:column}
+    .me{display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid #22293a}
+    .avatar{width:36px;height:36px;border-radius:50%;background:#334155;display:grid;place-items:center;font-weight:700}
+    .rooms{padding:8px;overflow:auto}
+    .rooms button{display:flex;width:100%;align-items:center;gap:10px;background:transparent;border:0;text-align:left;padding:10px;border-radius:10px;color:var(--text);cursor:pointer}
+    .rooms button:hover,.rooms button.active{background:#1b2231}
+    .composer{display:flex;gap:8px;padding:12px;border-top:1px solid #22293a;background:rgba(22,26,34,.8);backdrop-filter: blur(8px)}
+    .composer input[type=text]{flex:1;background:#101522;border:1px solid #283147;color:var(--text);padding:12px 12px;border-radius:12px}
+    .composer input[type=file]{display:none}
+    .composer .btn{background:#1b2231;border:1px solid #283147;color:#cbd5e1;padding:10px 12px;border-radius:12px;cursor:pointer}
+    .msgs{overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:10}
+    .modal.show{display:grid}
+    .call{background:var(--card);border:1px solid #283147;border-radius:18px;padding:14px;width:min(980px,96vw)}
+    .banner{display:none;position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:#111827;border:1px solid #283147;color:#e5e7eb;padding:10px 14px;border-radius:12px;z-index:20}
+    .banner.show{display:block}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">⚡ Realtime Chat (debug)</div>
+      <span class="pill" id="authState">Signed out</span>
+      <span class="sp"></span>
+      <button id="btnGoogle" class="tools button">Sign in with Google</button>
+      <button id="btnAnon" class="tools button">Sign in (Anonymous)</button>
+      <button id="btnSignOut" class="tools button" style="display:none">Sign out</button>
+      <button id="authAnonTest" class="tools button" title="Try anonymous sign-in (diagnostic)">Diag: Anonymous</button>
+      <button id="authGoogleTest" class="tools button" title="Try Google popup sign-in (diagnostic)">Diag: Google</button>
+      <button id="runTests" class="tools button" title="Run small sanity checks">Sanity tests</button>
+    </header>
+
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="me">
+          <div class="avatar" id="meAvatar">?</div>
+          <div>
+            <div id="meName">Guest</div>
+            <div class="presence" id="mePresence">offline</div>
+          </div>
+        </div>
+        <div class="tools" style="padding:10px;display:flex;gap:8px;border-top:1px solid #22293a">
+          <input id="newRoomName" placeholder="New room name" style="flex:1;background:#101522;border:1px solid #283147;color:#e5e7eb;padding:10px;border-radius:10px" />
+          <button id="createRoom">Create</button>
+        </div>
+        <div class="rooms" id="rooms"></div>
+      </aside>
+
+      <main class="main" style="display:grid;grid-template-rows:auto 1fr auto;background:radial-gradient(1200px 600px at 70% -10%, rgba(79,140,255,.06), transparent), var(--bg)">
+        <div class="room-head" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #22293a">
+          <div class="avatar" id="roomAvatar">#</div>
+          <div>
+            <div id="roomTitle">No room selected</div>
+            <div class="presence" id="roomPresence">—</div>
+          </div>
+          <span class="sp"></span>
+          <button id="btnVoice" class="tools button">Voice Call</button>
+          <button id="btnVideo" class="tools button">Video Call</button>
+        </div>
+
+        <div class="typing" id="typing" style="padding:4px 16px;color:var(--sub);font-size:12px"></div>
+        <div class="msgs" id="msgs"></div>
+
+        <div class="composer">
+          <label class="btn" for="file">📎</label>
+          <input id="file" type="file" accept="image/*" />
+          <input id="message" type="text" placeholder="Type a message…" />
+          <button id="send" class="btn">Send</button>
+        </div>
+      </main>
+    </div>
+
+    <footer style="padding:10px 16px;color:var(--sub);border-top:1px solid #22293a;background:var(--card)">Built with Firebase Realtime Database, Auth, and WebRTC.</footer>
+  </div>
+
+  <div class="modal" id="callModal"><div class="call"><header><strong id="callTitle">Call</strong></header><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><video id="localVideo" autoplay playsinline muted></video><video id="remoteVideo" autoplay playsinline></video></div><div style="display:flex;gap:8px;justify-content:center;margin-top:10px"><button id="endCall" class="danger">End</button></div></div></div>
+
+  <div class="banner" id="banner"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import { getDatabase, ref, push, set, onChildAdded, onValue, serverTimestamp, onDisconnect, remove, get, onChildChanged } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signInAnonymously, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+
+    // Replace with your Firebase project config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnj9N2Ed0OZCb2qVAB37oPXTw7NUvPNdc",
+      authDomain: "messager-57338.firebaseapp.com",
+      databaseURL: "https://messager-57338-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "messager-57338",
+      storageBucket: "messager-57338.firebasestorage.app",
+      messagingSenderId: "659724092913",
+      appId: "1:659724092913:web:1c7c3de633bdb6c39e7050",
+      measurementId: "G-DE4T4X768R"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const uid = () => auth.currentUser?.uid;
+
+    const els = {
+      authState: $('#authState'), btnGoogle: $('#btnGoogle'), btnAnon: $('#btnAnon'), btnSignOut: $('#btnSignOut'),
+      authAnonTest: $('#authAnonTest'), authGoogleTest: $('#authGoogleTest'), runTests: $('#runTests'),
+      meName: $('#meName'), meAvatar: $('#meAvatar'), mePresence: $('#mePresence'),
+      rooms: $('#rooms'), newRoomName: $('#newRoomName'), createRoom: $('#createRoom'),
+      roomTitle: $('#roomTitle'), roomAvatar: $('#roomAvatar'), roomPresence: $('#roomPresence'),
+      msgs: $('#msgs'), typing: $('#typing'), file: $('#file'), message: $('#message'), send: $('#send'),
+      btnVoice: $('#btnVoice'), btnVideo: $('#btnVideo'), modal: $('#callModal'), callTitle: $('#callTitle'), localVideo: $('#localVideo'), remoteVideo: $('#remoteVideo'), endCall: $('#endCall'),
+    };
+
+    // --- State variables ---
+    // currentRoomId was previously missing. Declare it upfront so any handler that references it won't throw.
+    let currentRoomId = null;
+    let pc = null, localStream = null, remoteStream = null, callPath = null;
+
+    const banner = (msg, timeout=2800) => { const b = $('#banner'); b.textContent = msg; b.classList.add('show'); console.info('BANNER:', msg); setTimeout(()=>b.classList.remove('show'), timeout); };
+
+    // Centralized handler for auth errors (including admin-restricted-operation)
+    function handleAuthError(err, ctx = ''){
+      console.error('Auth error', ctx, err);
+      const code = (err && err.code) ? String(err.code) : String(err && err.message || err);
+      if(code.includes('admin-restricted') || code.includes('ADMIN_RESTRICTED')){
+        banner('Blocked: This operation is restricted to project administrators. Check Firebase Console → Authentication → Sign-in method and enable the provider or allow account creation (project-level setting).');
+      } else if(code.includes('operation-not-allowed')){
+        banner('Provider disabled in Firebase Console → Authentication → Sign-in method. Enable the provider to proceed.');
+      } else if(code.includes('unauthorized-domain')){
+        banner('Unauthorized domain: add this domain under Firebase Console → Authentication → Authorized domains.');
+      } else if(code.includes('popup-closed-by-user')){
+        banner('Popup closed by user. Try signing in again.');
+      } else {
+        banner('Auth error: ' + (err.message || JSON.stringify(err)));
+      }
+    }
+
+    // Safe wrapper helpers for auth calls
+    async function trySignInWithGoogle(){
+      try{
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+      }catch(e){ handleAuthError(e, 'Google sign-in'); }
+    }
+    async function trySignInAnonymously(){
+      try{
+        await signInAnonymously(auth);
+      }catch(e){ handleAuthError(e, 'Anonymous sign-in'); }
+    }
+
+    // Hook up UI with catches
+    els.btnGoogle.onclick = async ()=> trySignInWithGoogle();
+    els.authGoogleTest.onclick = async ()=> trySignInWithGoogle();
+
+    els.btnAnon.onclick = async ()=> trySignInAnonymously();
+    els.authAnonTest.onclick = async ()=> {
+      // Diagnostic: try to sign-in-anonymously and then sign out to clean up
+      try{
+        banner('Diagnostic: attempting anonymous sign-in...');
+        await signInAnonymously(auth);
+        banner('Anonymous sign-in succeeded (diagnostic). Signing out...');
+        await signOut(auth);
+        banner('Signed out (diagnostic)');
+      }catch(e){ handleAuthError(e, 'Diag-anon'); }
+    };
+
+    els.btnSignOut.onclick = async ()=>{ try{ await signOut(auth); banner('Signed out'); }catch(e){ console.error(e); banner('Sign out failed'); } };
+
+    onAuthStateChanged(auth, async (user)=>{
+      if(!user){
+        els.authState.textContent = 'Signed out';
+        els.meName.textContent = 'Guest';
+        els.meAvatar.textContent = '?';
+        els.mePresence.textContent = 'offline';
+        els.btnSignOut.style.display = 'none'; els.btnGoogle.style.display = ''; els.btnAnon.style.display = '';
+        return;
+      }
+      // Try to ensure displayName for anonymous users (best-effort; may fail if project restricts updates)
+      if(!user.displayName){
+        try{ await updateProfile(user, { displayName: 'Guest-'+user.uid.slice(0,4) }); }catch(e){ console.warn('updateProfile failed:', e); }
+      }
+      els.authState.textContent = 'Signed in';
+      els.meName.textContent = user.displayName || 'User';
+      els.meAvatar.textContent = (user.displayName||'U').slice(0,2).toUpperCase();
+      els.mePresence.textContent = 'online';
+      els.btnSignOut.style.display = ''; els.btnGoogle.style.display = 'none'; els.btnAnon.style.display = 'none';
+
+      setupPresence();
+      subscribeRooms();
+    });
+
+    // Ensure the user is signed in before actions that write user-specific data
+    function ensureAuth(action = 'perform this action'){
+      if(uid()) return true;
+      banner(`Please sign in (Google / Anonymous) to ${action}.`);
+      return false;
+    }
+
+    function setupPresence(){
+      if(!uid()) return;
+      const statusRef = ref(db, `status/${uid()}`);
+      const connectedRef = ref(db, ".info/connected");
+      onValue(connectedRef, (snap)=>{
+        if(snap.val() === false) return;
+        onDisconnect(statusRef).set({ state:'offline', lastChanged: serverTimestamp() });
+        set(statusRef, { state:'online', lastChanged: serverTimestamp() });
+      });
+    }
+
+    // Rooms
+    els.createRoom.onclick = async ()=>{
+      if(!ensureAuth('create a room')) return;
+      const name = (els.newRoomName.value || '').trim();
+      if(!name) return banner('Room name required');
+      try{
+        const rRef = push(ref(db, 'rooms'));
+        // createdBy will be UID (ensureAuth ensures user exists). If something odd happens, omit createdBy rather than writing undefined.
+        const payload = { name, createdAt: serverTimestamp() };
+        if(uid()) payload.createdBy = uid();
+        await set(rRef, payload);
+        els.newRoomName.value = '';
+        banner('Room created');
+      }catch(e){ console.error('createRoom failed', e); banner('Failed to create room: ' + (e.message||e)); }
+    };
+
+    function subscribeRooms(){
+      els.rooms.innerHTML = '';
+      const rRef = ref(db, 'rooms');
+      onChildAdded(rRef, (snap)=> renderRoomItem(snap.key, snap.val()));
+      // also update existing rooms changed
+      onChildChanged(rRef, (snap)=>{
+        // naive approach: if UI has a button for this roomId, update its label
+        const roomId = snap.key; const room = snap.val(); const el = document.getElementById(`room-btn-${roomId}`);
+        if(el) el.querySelector('.room-name') && (el.querySelector('.room-name').textContent = room.name || 'Room');
+      });
+    }
+
+    function renderRoomItem(roomId, room){
+      // create a button element for the room; id attribute helps later updates
+      const btn = document.createElement('button'); btn.id = `room-btn-${roomId}`;
+      const roomName = room?.name || 'Room';
+      btn.innerHTML = `<div class=\"avatar\">${String(roomName[0]||'R').toUpperCase()}</div><div style=\"flex:1;margin-left:8px;\"><div class=\"room-name\">${roomName}</div><div class=\"presence\" id=\"presence-${roomId}\">—</div></div><div class=\"meta\"><div class=\"unread\" id=\"unread-${roomId}\" style=\"display:none\">0</div></div>`;
+      btn.onclick = (e)=> selectRoom(e, roomId, room);
+      els.rooms.appendChild(btn);
+
+      onValue(ref(db, `roomPresence/${roomId}/count`), (s)=>{
+        const el = document.getElementById(`presence-${roomId}`);
+        if(el) el.textContent = s.exists() ? `${s.val()} online` : '—';
+      });
+
+      if(uid()){
+        onValue(ref(db, `lastRead/${roomId}/${uid()}`), (s)=>{
+          const lastRead = s.val() || 0;
+          get(ref(db, `rooms/${roomId}/messages`)).then(messagesSnap=>{
+            let unread = 0;
+            messagesSnap.forEach(m=>{ if((m.val().ts||0) > lastRead) unread++; });
+            const badge = document.getElementById(`unread-${roomId}`);
+            if(badge){ badge.style.display = unread ? 'inline-block' : 'none'; badge.textContent = unread; }
+          }).catch(e=>console.warn('count unread failed', e));
+        });
+      }
+    }
+
+    // selectRoom: allow event to be null (tests may call without a DOM event). Safe assignment prevents ReferenceError.
+    function selectRoom(eventOrNull, roomId, room){
+      currentRoomId = roomId;
+      // remove active class from previous buttons
+      $$('#rooms button').forEach(b=>b.classList.remove('active'));
+      // if an event with a currentTarget is passed (normal flow), mark it active
+      if(eventOrNull && eventOrNull.currentTarget) eventOrNull.currentTarget.classList.add('active');
+      els.roomTitle.textContent = room?.name || 'Room';
+      els.roomAvatar.textContent = (room?.name?.[0]||'#').toUpperCase();
+      els.msgs.innerHTML = '';
+      subscribeMessages(roomId);
+      startTypingWatcher(roomId);
+      if(uid()) set(ref(db, `lastRead/${roomId}/${uid()}`), Date.now()).catch(()=>{});
+    }
+
+    // Messages
+    function subscribeMessages(roomId){
+      const mRef = ref(db, `rooms/${roomId}/messages`);
+      onChildAdded(mRef, (snap)=>{
+        const m = snap.val(); renderMessage(m, snap.key); els.msgs.scrollTop = els.msgs.scrollHeight;
+      });
+    }
+
+    function renderMessage(m){
+      const mine = m.uid === uid();
+      const div = document.createElement('div');
+      div.className = 'msg' + (mine ? ' mine' : '');
+      div.innerHTML = `<div class=\"avatar\">${String((m.name||'??').slice(0,2)).toUpperCase()}</div><div class=\"bubble\">${m.text ? `<div>${escapeHtml(m.text)}</div>` : ''}${m.image ? `<img class=\"attach\" src=\"${m.image}\" alt=\"attachment\"/>` : ''}<div class=\"meta-line\"><span>${new Date(m.ts||Date.now()).toLocaleTimeString()}</span>${m.readBy? `<span>Read by ${Object.keys(m.readBy).length}</span>` : ''}</div></div>`;
+      els.msgs.appendChild(div);
+    }
+
+    function escapeHtml(s){ return String(s).replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+    let typingTimer = null;
+    function startTypingWatcher(roomId){
+      const tRef = ref(db, `typing/${roomId}`);
+      onValue(tRef, (snap)=>{
+        const val = snap.val() || {};
+        if(uid()) delete val[uid()];
+        const names = Object.values(val).map(v=>v.name);
+        $('#typing').textContent = names.length ? `${names.join(', ')} is typing…` : '';
+      });
+    }
+
+    els.message.addEventListener('input', ()=>{
+      if(!currentRoomId) return;
+      if(!uid()) return; // don't write typing state when not signed in
+      set(ref(db, `typing/${currentRoomId}/${uid()}`), { name: auth.currentUser?.displayName || 'User', ts: Date.now() }).catch(e=>console.warn('typing write failed', e));
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(()=> remove(ref(db, `typing/${currentRoomId}/${uid()}`)).catch(()=>{}), 1200);
+    });
+
+    els.send.onclick = async ()=>{
+      if(!currentRoomId) return banner('Pick a room first');
+      if(!ensureAuth('send messages')) return;
+      const text = (els.message.value || '').trim();
+      let imageUrl = null;
+      try{ imageUrl = await maybeUploadImage(); }catch(e){ console.warn('image upload inlined failed', e); }
+      if(!text && !imageUrl) return;
+      try{
+        const mRef = push(ref(db, `rooms/${currentRoomId}/messages`));
+        const payload = { uid: uid() || null, name: auth.currentUser?.displayName || 'User', text: text || null, image: imageUrl || null, ts: Date.now() };
+        await set(mRef, payload);
+        els.message.value = '';
+        remove(ref(db, `typing/${currentRoomId}/${uid()}`)).catch(()=>{});
+        if(uid()) set(ref(db, `lastRead/${currentRoomId}/${uid()}`), Date.now()).catch(()=>{});
+      }catch(e){ console.error('send message failed', e); banner('Failed to send message: ' + (e.message||e)); }
+    };
+
+    async function maybeUploadImage(){
+      const f = els.file.files[0]; if(!f) return null;
+      // quick inline base64 (not recommended for production)
+      return await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(f); });
+    }
+
+    els.msgs.addEventListener('scroll', ()=>{
+      if(!currentRoomId || !uid()) return;
+      if(els.msgs.scrollTop + els.msgs.clientHeight >= els.msgs.scrollHeight - 10){
+        set(ref(db, `lastRead/${currentRoomId}/${uid()}`), Date.now()).catch(e=>console.warn('lastRead write failed', e));
+      }
+    });
+
+    // WebRTC (kept minimal) — guard writes with try/catch
+    async function startCall(video=false){
+      if(!currentRoomId) return banner('Pick a room first');
+      if(!ensureAuth('start a call')) return;
+      try{
+        localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video });
+        remoteStream = new MediaStream();
+        $('#localVideo').srcObject = localStream; $('#remoteVideo').srcObject = remoteStream;
+        pc = new RTCPeerConnection({ iceServers:[{urls:'stun:stun.l.google.com:19302'}] });
+        localStream.getTracks().forEach(t=> pc.addTrack(t, localStream));
+        pc.ontrack = e => e.streams[0].getTracks().forEach(t=> remoteStream.addTrack(t));
+
+        const callRef = push(ref(db, `calls/${currentRoomId}`)); const callId = callRef.key; callPath = `calls/${currentRoomId}/${callId}`;
+        pc.onicecandidate = e => { if(e.candidate) push(ref(db, `${callPath}/callerCandidates`), e.candidate.toJSON()).catch(e=>console.warn('push ICE failed', e)); };
+        const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
+        const payload = { offer, roomId: currentRoomId, createdAt: serverTimestamp() }; if(uid()) payload.from = uid();
+        await set(ref(db, callPath), payload);
+
+        onValue(ref(db, `${callPath}/answer`), async (snap)=>{ if(snap.exists() && pc.signalingState !== 'stable'){ await pc.setRemoteDescription(new RTCSessionDescription(snap.val())); } });
+        onChildAdded(ref(db, `${callPath}/calleeCandidates`), (snap)=> pc.addIceCandidate(new RTCIceCandidate(snap.val())));
+      }catch(e){ console.error('startCall failed', e); handleAuthError(e, 'startCall'); }
+    }
+
+    async function answerIncoming(callId){
+      if(!ensureAuth('answer a call')) return;
+      try{
+        localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:true }); remoteStream = new MediaStream(); $('#localVideo').srcObject = localStream; $('#remoteVideo').srcObject = remoteStream;
+        pc = new RTCPeerConnection({ iceServers:[{urls:'stun:stun.l.google.com:19302'}] }); localStream.getTracks().forEach(t=> pc.addTrack(t, localStream)); pc.ontrack = e => e.streams[0].getTracks().forEach(t=> remoteStream.addTrack(t));
+        callPath = `calls/${currentRoomId}/${callId}`;
+        pc.onicecandidate = e => { if(e.candidate) push(ref(db, `${callPath}/calleeCandidates`), e.candidate.toJSON()).catch(e=>console.warn('push callee ICE failed', e)); };
+        const callSnap = await get(ref(db, callPath)); const { offer } = callSnap.val() || {};
+        if(!offer) return banner('Call offer not found');
+        await pc.setRemoteDescription(new RTCSessionDescription(offer)); const answer = await pc.createAnswer(); await pc.setLocalDescription(answer); await set(ref(db, `${callPath}/answer`), answer);
+        onChildAdded(ref(db, `${callPath}/callerCandidates`), (snap)=> pc.addIceCandidate(new RTCIceCandidate(snap.val())));
+      }catch(e){ console.error('answerIncoming failed', e); handleAuthError(e, 'answerIncoming'); }
+    }
+
+    function endCall(){ try{ pc?.getSenders().forEach(s=> s.track?.stop()); pc?.close(); }catch(e){} pc=null; localStream=null; remoteStream=null; callPath=null; $('#callModal').classList.remove('show'); }
+    $('#btnVoice').onclick = ()=> startCall(false); $('#btnVideo').onclick = ()=> startCall(true); $('#endCall').onclick = endCall;
+
+    // Incoming call watcher (simple polling) — only active for signed-in users
+    setInterval(async ()=>{
+      if(!currentRoomId || !uid()) return;
+      try{
+        const callsSnap = await get(ref(db, `calls/${currentRoomId}`)); if(!callsSnap.exists()) return;
+        const entries = Object.entries(callsSnap.val());
+        for(const [id, obj] of entries){ if(!obj.answer && obj.from !== uid()){ if(confirm('Incoming call. Answer?')){ await answerIncoming(id); return; } } }
+      }catch(e){ console.warn('incoming call watcher err', e); }
+    }, 3000);
+
+    // Sanity / diagnostics tests (extended)
+    function runSanityTests(){
+      const results = [];
+      // Basic SDK checks
+      results.push({ test: 'SDK loaded', ok: !!app });
+      results.push({ test: 'Auth initialized', ok: !!auth });
+      results.push({ test: 'DB initialized', ok: !!db });
+      // State checks
+      results.push({ test: 'currentRoomId defined', ok: typeof currentRoomId !== 'undefined' });
+
+      // Functional check: selectRoom without DOM event should set currentRoomId
+      const testRoomId = 'local-test-room-' + Math.random().toString(36).slice(2,7);
+      try{
+        selectRoom(null, testRoomId, { name: 'Local Test Room' });
+        results.push({ test: 'selectRoom sets currentRoomId', ok: currentRoomId === testRoomId });
+      }catch(e){ results.push({ test: 'selectRoom sets currentRoomId', ok:false, error: String(e) }); }
+
+      // Clean up after test
+      currentRoomId = null;
+
+      // Guard check: sending without room triggers banner early (we capture banner)
+      const previousBanner = banner;
+      let lastBanner = null;
+      window.banner = (m, t=2800)=>{ lastBanner = m; console.info('TEST-BANNER:', m); previousBanner(m,t); };
+      try{
+        // call send handler synchronously (it returns a Promise but early-return will run synchronously)
+        els.send.onclick();
+        results.push({ test: 'send without room warns', ok: lastBanner && lastBanner.toLowerCase().includes('pick a room') });
+      }catch(e){ results.push({ test: 'send without room warns', ok:false, error:String(e) }); }
+      // restore
+      window.banner = previousBanner;
+
+      console.table(results);
+      banner('Sanity checks completed — see console for details');
+    }
+    els.runTests.onclick = runSanityTests;
+
+    // Helpful console guidance for common Firebase auth errors
+    console.info('If you see auth/admin-restricted-operation, it means account creation or the provider is restricted in the Firebase project. Typical fixes: (1) In Firebase Console → Authentication → Sign-in method, enable the provider and allow account creation; (2) Add this domain to Authorized domains (if unauthorized-domain).');
+
+  </script>
+</body>
+</html>
